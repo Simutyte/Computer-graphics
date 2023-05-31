@@ -1,0 +1,348 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <script type="application/javascript">
+  
+      
+      const animationTimeMs = 500;
+      const waitS = 0.25;
+      var t = 0;
+      var allTime;
+      var bigFigure = 0;
+      var stepT = 1 / animationTimeMs;
+      var num = 0;
+      var ctx;
+      var canvas;
+      var nowValue ;
+
+      function init()
+      {
+        canvas = document.getElementById('canvas');
+       
+        if (canvas.getContext) 
+        {
+          ctx = canvas.getContext("2d");
+
+          clear(ctx);
+          drawBorder(ctx);
+        }
+      }   
+
+      
+      
+      
+      function animate(ctx,transformX, transformY, rotate, scaleX, scaleY,colour, flip = false)
+      {
+        console.log(t);
+        ctx.save();
+        ctx.translate(0+t*transformX, 0+t*transformY); 
+        ctx.rotate(0+t*rotate); 
+
+        if(flip)
+        {
+          if(scaleX < 0)
+          {
+            let temp = (1+(-scaleX))*t;
+            ctx.scale(1-temp,1-t*scaleY);
+          }
+          else
+          {
+            let temp = (1+(-scaleY))*t;
+            ctx.scale(1-t*scaleX,1-temp);
+          }
+          
+        }
+        else
+        {
+          let temp = (1-scaleX)*t;
+          ctx.scale(1-temp,1-temp);
+        }
+                
+        drawF(ctx, colour);
+        ctx.restore();
+        t += stepT;
+        allTime += stepT*2;
+      }       
+  
+      function drawF(ctx, colour=null) 
+      {
+        ctx.beginPath();
+        ctx.fillStyle = colour;
+        ctx.moveTo(0,0);
+        ctx.lineTo(250,0);
+        ctx.lineTo(250,125);
+        ctx.lineTo(125,125);
+        ctx.lineTo(125,375);
+        ctx.lineTo(250,375);
+        ctx.lineTo(250,250);
+        ctx.lineTo(500,250);
+        ctx.lineTo(500,375);
+        ctx.lineTo(375,375);
+        ctx.lineTo(375,500);
+        ctx.lineTo(0,500);
+        ctx.lineTo(0,0);
+
+        ctx.moveTo(314,64);
+        ctx.lineTo(435,64);
+        ctx.lineTo(435,185);
+        ctx.lineTo(314,185);
+        ctx.lineTo(314,64);
+        ctx.fill();
+      }       
+        
+      function drawBig(ctx)
+      {
+        ctx.save();
+        drawF(ctx);
+        ctx.restore();
+      }
+
+      function clear(ctx) 
+      {
+        ctx.clearRect(0, 0, 500, 500);
+      }
+
+      function drawBorder(ctx)
+      {
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(500,0);
+        ctx.lineTo(500,500);
+        ctx.lineTo(0,500);
+        ctx.closePath();
+        ctx.stroke(); 
+      }
+      
+      function disableButtons(toDisable)
+      {
+         let allBtns = document.getElementsByClassName("button");
+         for(let i=0; i<allBtns.length; i++)
+         {
+            allBtns[i].disabled = toDisable;
+         }
+      }
+
+      function transformationAnimation(value)
+      {
+        init();
+        
+        nowValue = nowValue ? nowValue : value;
+        t = t ? t: 0;
+        //console.log(t);
+        //console.log(nowValue);
+        if(value == 5)
+        {
+          draw();
+          nowValue = null;
+          t = null;
+        }
+        else
+        {
+          if(t <= 1)
+          {
+            if(nowValue == 1)
+              animate(ctx, 500, 250, Math.PI/2, 0.5, 0.5, "red");
+            
+            if(nowValue == 2)
+              animate(ctx, 250, 500, Math.PI/2, -0.5, 0.5, "green",true);
+
+            if(nowValue == 3)
+              animate(ctx, 0, 250, 0, 0.5, -0.5, "blue",true);
+
+            if(nowValue == 4)
+              animate(ctx, 435, 185, Math.PI, 0.25, 0.25, "orange");
+            window.requestAnimationFrame(transformationAnimation);
+
+          }
+          else
+          {
+            if(nowValue == 1)
+              drawTransformed(ctx, 500, 250, Math.PI/2, 0.5, 0.5, "red");
+              
+            if(nowValue == 2)
+              drawTransformed(ctx, 250, 500, Math.PI/2, -0.5, 0.5, "green");
+
+            if(nowValue == 3)
+              drawTransformed(ctx, 0, 250, Math.PI, -0.5, 0.5, "blue");
+
+            if(nowValue == 4)
+              drawTransformed(ctx, 435, 185, Math.PI, 0.25, 0.25, "orange");  
+              
+            nowValue = null;
+            t = null;
+            disableButtons(false);
+            
+          }
+        }
+        
+      }
+
+      function drawTransformed(ctx,transformX, transformY, rotate, scaleX, scaleY,colour)
+      {
+        ctx.save();
+        ctx.translate(transformX, transformY); 
+        ctx.rotate(rotate);
+        ctx.scale(scaleX,scaleY);
+        drawF(ctx, colour);
+        ctx.restore();
+      }
+
+      function draw() 
+      {
+        let canvas = document.getElementById('canvas');
+        let ctx = null;
+
+        if (canvas.getContext) 
+        {
+          ctx = canvas.getContext("2d");
+
+          //clean canvas
+          clear(ctx);
+          drawBorder(ctx);
+          allTime = allTime ? allTime : 0;
+          alreadyAnimated(ctx, allTime);
+          t = t ? t: 0;
+
+          if( allTime < animationTimeMs/1000+waitS)
+          {
+           
+            if(allTime >= animationTimeMs/1000)
+            {
+              t = 0;
+              allTime = animationTimeMs/1000+waitS;             
+              window.requestAnimationFrame(draw);
+            }
+
+            animate(ctx,500, 250, Math.PI/2, 0.5, 0.5, "red",false);
+            window.requestAnimationFrame(draw);
+          }
+          //2 transformacija
+          else if(allTime >= animationTimeMs/1000+waitS && allTime < 2*animationTimeMs/1000+waitS*2)
+          {
+            if( t >= 1)
+            {
+              t = 0;
+              allTime = 2*animationTimeMs/1000+waitS*2;
+              window.requestAnimationFrame(draw);
+            }
+
+            animate(ctx,250, 500, Math.PI/2, -0.5, 0.5, "green",true);
+            window.requestAnimationFrame(draw);
+          }
+          //3 transformacija
+          else if(allTime >= 2*animationTimeMs/1000+waitS*2 && allTime < 3*animationTimeMs/1000+waitS*3)
+          {
+            if( t >= 1)
+            {
+              t = 0;
+              allTime = 3*animationTimeMs/1000+waitS*3;
+              window.requestAnimationFrame(draw);
+            }
+
+            animate(ctx, 0, 250, 0, 0.5, -0.5, "blue",true);
+            window.requestAnimationFrame(draw);
+          }
+          //4 transformacija
+          else if(allTime >= 3*animationTimeMs/1000+waitS*3 && allTime < 4*animationTimeMs/1000+waitS*4)
+          {
+            if(allTime >= 4*animationTimeMs/1000 && t >= 1)
+            {
+              /*console.log(t);
+              console.log(allTime);*/
+              t = 0;
+              allTime = 4*animationTimeMs/1000+waitS*4;
+              window.requestAnimationFrame(draw);
+            }
+
+              animate(ctx, 435, 185, Math.PI, 0.25, 0.25, "orange",false);
+            window.requestAnimationFrame(draw);
+          }
+        }
+      }
+
+      function alreadyAnimated(ctx, allTime)
+      {
+        if(allTime >= animationTimeMs/1000)
+        {
+          drawTransformed(ctx,500, 250, Math.PI/2, 0.5, 0.5, "red");
+        }
+
+        if(allTime >= 2*animationTimeMs/1000+waitS*2)
+        {
+          drawTransformed(ctx,250, 500, Math.PI/2, -0.5, 0.5, "green");
+        }
+
+        if(allTime >= 3*animationTimeMs/1000+waitS*3)
+        {
+          drawTransformed(ctx, 0, 250, 0, 0.5, -0.5, "blue");
+        }
+
+        if(allTime >= 4*animationTimeMs/1000+waitS*4)
+        {
+          drawTransformed(ctx,435, 185, Math.PI, 0.25, 0.25, "orange");
+          disableButtons(false);
+        }
+      }
+
+    </script>
+    
+    <style>
+      .button:enabled
+      {
+        background-color: red; 
+        border: none;
+        border-radius: 2px;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        cursor: pointer;
+      }
+
+      .button:disabled
+      {
+        background-color: red; 
+        border: none;
+        border-radius: 2px;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 4px 2px;
+        opacity: 0.65;
+      }
+
+      
+    </style>
+   </head>
+
+
+  <body onload="init();">
+      <h1>1Atsiskaitymas - animacijos</h1>
+    </div>
+      <button class="button" type="button" value="1" onclick="transformationAnimation(value); disableButtons(true)">
+        1 transformacija
+      </button>
+      <button class="button" style="background-color: green;" type="button" value="2" onclick="transformationAnimation(value); disableButtons(true)">
+        2 transformacija
+      </button>
+      <button class="button" style="background-color: blue;" type="button" value="3" onclick="transformationAnimation(value); disableButtons(true)">
+        3 transformacija
+      </button>
+      <button class="button" style="background-color: orange;" type="button" value="4" onclick="transformationAnimation(value); disableButtons(true)">
+        4 transformacija
+      </button>
+      <button  class="button" style="background-color: black;" type="button"value="5" onclick="transformationAnimation(value); disableButtons(true)">
+        visos
+      </button>
+    <div>
+     <p></p>
+    <div >
+      <canvas id="canvas" width="500" height="500"></canvas>
+    </div>
+    
+  </body>
+</html>

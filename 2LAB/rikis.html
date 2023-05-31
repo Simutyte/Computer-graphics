@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>RIKIS</title>
+    <script type="text/javascript" src="libs/three.min.js"></script>
+    <script type="text/javascript" src="libs/jquery-1.9.0.js"></script>
+    <script type="text/javascript" src="libs/stats.js"></script>
+    <script type="text/javascript" src="libs/dat.gui.js"></script>
+    <script type="text/javascript" src="libs/TrackballControls.js"></script>
+    <script type="text/javascript" src="libs/ThreeBSP.js"></script>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="Stats-output">
+    </div>
+    <!-- Div which will hold the Output -->
+    <div id="WebGL-output">
+    </div>
+
+    <!-- Javascript code that runs our Three.js examples -->
+    <script type="text/javascript">
+
+        // once everything is loaded, we run our Three.js stuff.
+        $(function () {
+
+            var stats = initStats();
+
+            // create a scene, that will hold all our elements such as objects, cameras and lights.
+            var scene = new THREE.Scene();
+
+            // create a camera, which defines where we're looking at.
+            var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // create a render and set the size
+            var webGLRenderer = new THREE.WebGLRenderer();
+            webGLRenderer.setClearColor(0xEEEEEE, 1.0);
+            webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+            webGLRenderer.shadowMapEnabled = true;
+
+            // position and point the camera to the center of the scene
+            camera.position.x = -30;
+            camera.position.y = 40;
+            camera.position.z = 50;
+            camera.lookAt(new THREE.Vector3(10, 0, 0));
+
+            // add the output of the renderer to the html element
+            $("#WebGL-output").append(webGLRenderer.domElement);
+
+            camControl = new THREE.TrackballControls(camera, webGLRenderer.domElement);
+
+            // call the render function
+            var step = 0;
+
+            // the points group
+            var spGroup;
+            // the mesh
+            var latheMesh;
+
+            //var sphere = createMesh(new THREE.SphereGeometry(2, 20, 30));
+            //sphere.position.set(0, 0, 14.5);
+            /*sphere.geometry.computeFaceNormals();
+            sphere.geometry.computeVertexNormals();
+
+            var sphereBSP = new ThreeBSP(sphere);*/
+
+            var light = new THREE.DirectionalLight( 0xffffff, 1 );
+            light.position.set( 10, 10, 10 );
+            scene.add( light );
+
+            generatePoints(12);
+
+            // setup the control gui
+            var controls = new function () {
+                // we need the first child, since it's a multimaterial
+
+                this.segments = 12;
+                this.phiStart = 0;
+                this.phiLength = 2 * Math.PI;
+
+                this.redraw = function () {
+                    scene.remove(spGroup);
+                    scene.remove(latheMesh);
+                    generatePoints(controls.segments);
+                };
+            }
+
+            var gui = new dat.GUI();
+            gui.add(controls, 'segments', 0, 50).step(1).onChange(controls.redraw);
+
+           
+            //var sphereBSP = new ThreeBSP(sphere);
+            //var latheBSP = new ThreeBSP(latheMesh);
+            //var reactBSP = new ThreeBSP(react);
+            //var resultBSP = latheBSP.union(sphereBSP);
+           // resultBSP = resultBSP.subtract(reactBSP);
+
+            render();
+
+            function generatePoints(segments) {
+                var pointsX = [
+                    256, 241, 231, 221, 216,
+                    216, 211, 211, 216, 226,
+                    221, 211, 211, 216, 201,
+                    211, 201, 196, 201, 216,
+                    216, 211, 211, 216, 226,
+                    226, 226, 221, 216, 211,
+                    206, 191, 181, 181, 196,
+                    191, 176, 151, 136, 131,
+                    136, 146,
+                    131, 126, 126, 151, 201, 256, 250
+                    ];
+                var pointsY = [
+                    65, 74, 88, 107, 121,
+                    120, 139, 153, 167, 181,
+                    180, 184, 188, 192, 196,
+                    190, 194, 203, 212, 216,
+                    215, 219, 223, 227, 231,
+                    260, 289, 323, 347, 371,
+                    375, 374, 383, 392, 401,
+                    410, 419, 428, 437, 451,
+                    458, 467,
+                    471, 480, 494, 491, 491, 491, 491
+                    ];
+
+                // add 10 random spheres
+                var points = [];
+                var height = 5;
+                var count = pointsX.length;
+                for (var i = 0; i < count; i++) {
+                    points.push(new THREE.Vector3(25 - pointsX[i] / 10, 0, (pointsY[30] - pointsY[i] - 174) / 10));
+                }
+
+                spGroup = new THREE.Object3D();
+                var material = new THREE.MeshBasicMaterial({ color: 0x7C807B, transparent: false });
+                points.forEach(function (point) {
+
+                    var spGeom = new THREE.SphereGeometry(0.2);
+                    var spMesh = new THREE.Mesh(spGeom, material);
+                    spMesh.position = point;
+                    spGroup.add(spMesh);
+                });
+                // add the points as a group to the scene
+                //scene.add(spGroup);
+
+                // use the same points to create a latheGeometry
+                //var latheGeometry = new THREE.LatheGeometry(points, Math.ceil(segments), phiStart, phiLength);
+                var latheGeometry = new THREE.LatheGeometry(points, Math.ceil(segments), 0, 2 * Math.PI);
+                //latheMesh = createMesh(latheGeometry);
+
+                latheMesh = createSimpleMesh(latheGeometry);
+                //latheMesh.position.set(0,0,0);
+                //scene.add(latheMesh);
+
+                
+
+                var sphere = createSimpleMesh(new THREE.SphereGeometry(2, 20, 30));
+                sphere.position.set(0, 0, 14.5);
+                sphere.updateMatrix();
+                //latheMesh.geometry.merge(sphere.geometry, sphere.matrix);
+                //scene.add(sphere);
+                //scene.add(latheMesh);
+
+                var react = new createSimpleMesh(new THREE.BoxGeometry(10, 10, 1));
+                react.position.set(-3, 0, 10);
+                //react.position.set(221, 180, 13);
+                react.rotation.set(0, Math.PI / 3, 0);
+                //scene.add(react);
+                var sphereBSP = new ThreeBSP(sphere);
+                var latheBSP = new ThreeBSP(latheMesh);
+                var reactBSP = new ThreeBSP(react);
+                var resultBSP;
+                //resultBSP = latheBSP.subtract(sphereBSP);
+                //resultBSP = resultBSP.subtract(sphereBSP);
+                resultBSP = latheBSP.union(reactBSP);
+                var result;
+                result = resultBSP.toMesh();
+                result.geometry.computeFaceNormals();
+                result.geometry.computeVertexNormals();
+                //scene.add(result);
+                latheMesh = createSimpleMesh(result.geometry);
+
+                latheMesh.geometry.merge(sphere.geometry, sphere.matrix);
+                //latheMesh = createMesh(latheGeometry);
+                scene.add(latheMesh);
+               
+            }
+
+            function createSimpleMesh(geom) {
+
+                // assign two materials
+                //vienspalvis
+                // var meshMaterial = new THREE.MeshBasicMaterial({color:0x00ff00, transparent:true, opacity:0.6});
+                var meshMaterial = new THREE.MeshNormalMaterial({shiness: 100});
+                meshMaterial.side = THREE.DoubleSide;
+                var wireFrameMat = new THREE.MeshBasicMaterial({ transparency: true, opacity: 0.5, wireframeLinewidth: 0.5 });
+                wireFrameMat.wireframe = true;
+
+                // create a multimaterial
+                var mesh = new THREE.Mesh(geom, meshMaterial);
+
+                return mesh;
+            }
+
+            function createMesh(geom) {
+
+                // assign two materials
+                //vienspalvis
+                // var meshMaterial = new THREE.MeshBasicMaterial({color:0x00ff00, transparent:true, opacity:0.6});
+                var meshMaterial = new THREE.MeshNormalMaterial();
+                meshMaterial.side = THREE.DoubleSide;
+                var wireFrameMat = new THREE.MeshBasicMaterial();
+                wireFrameMat.wireframe = true;
+
+                // create a multimaterial
+                var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, [meshMaterial, wireFrameMat]);
+
+                return mesh;
+            }
+
+            function render() {
+                stats.update();
+
+                spGroup.rotation.x = step;
+                //latheMesh.rotation.x = step += 0.01;
+
+                // render using requestAnimationFrame
+                requestAnimationFrame(render);
+                camControl.update();
+                webGLRenderer.render(scene, camera);
+            }
+
+            function initStats() {
+
+                var stats = new Stats();
+                stats.setMode(0); // 0: fps, 1: ms
+
+                // Align top-left
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                $("#Stats-output").append(stats.domElement);
+
+                return stats;
+            }
+        });
+
+
+    </script>
+</body>
+</html>
